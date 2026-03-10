@@ -1,0 +1,308 @@
+/* ============================================================
+   style.css — Reversi / Othello
+   CSS custom properties make it easy to retheme the game.
+   ============================================================ */
+
+/* ------------------------------------------------------------
+   Design tokens (variables)
+   ------------------------------------------------------------ */
+:root {
+  /* Board */
+  --board-bg:           #276221;   /* classic green felt */
+  --board-border:       #1a3d17;
+  --board-shadow:       rgba(0, 0, 0, 0.45);
+  --cell-border:        #1e4d1a;
+  --cell-size:          60px;
+
+  /* Pieces */
+  --disc-size:          46px;
+  --disc-black:         #1a1a1a;
+  --disc-black-shine:   #555;
+  --disc-white:         #f5f5f5;
+  --disc-white-shine:   #fff;
+  --disc-shadow:        rgba(0, 0, 0, 0.5);
+
+  /* Hint dots */
+  --hint-dot-color:     rgba(255, 255, 255, 0.35);
+  --hint-hover-bg:      rgba(255, 255, 255, 0.12);
+
+  /* UI chrome */
+  --bg:                 #1b2a1a;
+  --surface:            #243323;
+  --surface-alt:        #1e2b1d;
+  --text-primary:       #e8f5e2;
+  --text-secondary:     #9ab894;
+  --accent:             #5cb85c;
+  --accent-hover:       #4cae4c;
+  --radius:             8px;
+  --font:               'Segoe UI', system-ui, sans-serif;
+}
+
+/* ------------------------------------------------------------
+   Reset / base
+   ------------------------------------------------------------ */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text-primary);
+  font-family: var(--font);
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* ------------------------------------------------------------
+   Layout
+   ------------------------------------------------------------ */
+header {
+  width: 100%;
+  padding: 1rem 1.5rem 0.75rem;
+  text-align: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+header h1 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--accent);
+}
+
+main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 1.5rem 1rem 2rem;
+  width: 100%;
+  max-width: 560px;
+}
+
+/* ------------------------------------------------------------
+   Score panel
+   ------------------------------------------------------------ */
+.score-panel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 0.75rem 1.5rem;
+  gap: 1rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+
+.score-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.score-disc {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  box-shadow: 0 2px 5px var(--disc-shadow);
+}
+
+.score-disc--black {
+  background: radial-gradient(circle at 35% 35%, var(--disc-black-shine), var(--disc-black));
+}
+
+.score-disc--white {
+  background: radial-gradient(circle at 35% 35%, var(--disc-white-shine), var(--disc-white));
+}
+
+.score-label {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  line-height: 1;
+}
+
+.score-value {
+  font-size: 2rem;
+  font-weight: 700;
+  min-width: 2ch;
+  text-align: center;
+  line-height: 1;
+}
+
+/* ------------------------------------------------------------
+   Status bar
+   ------------------------------------------------------------ */
+.status {
+  font-size: 1rem;
+  font-weight: 600;
+  padding: 0.5rem 1.25rem;
+  border-radius: var(--radius);
+  text-align: center;
+  transition: background 0.25s, color 0.25s;
+  width: 100%;
+}
+
+.status--turn { background: var(--surface-alt); color: var(--text-primary); }
+.status--pass { background: #5a4a10; color: #ffd84d; }
+.status--win  { background: #1a4a1a; color: #7cfc7c; }
+.status--draw { background: #2a3a4a; color: #a0c8e8; }
+
+/* ------------------------------------------------------------
+   Board
+   ------------------------------------------------------------ */
+#board-container {
+  border: 4px solid var(--board-border);
+  border-radius: 4px;
+  box-shadow:
+    0 0 0 2px #0d1e0c,
+    0 8px 32px var(--board-shadow);
+  overflow: hidden;
+  transition: opacity 0.2s;
+}
+
+#board-container.board--disabled {
+  opacity: 0.8;
+  pointer-events: none;
+}
+
+.board {
+  border-collapse: collapse;
+  background: var(--board-bg);
+}
+
+.cell {
+  width:  var(--cell-size);
+  height: var(--cell-size);
+  border: 1px solid var(--cell-border);
+  cursor: pointer;
+  position: relative;
+  vertical-align: middle;
+  text-align: center;
+  transition: background 0.15s;
+}
+
+.cell:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.cell.hint::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--hint-dot-color);
+  pointer-events: none;
+}
+
+.cell.hint:hover {
+  background: var(--hint-hover-bg);
+}
+
+/* ------------------------------------------------------------
+   Discs
+   ------------------------------------------------------------ */
+.disc {
+  width:  var(--disc-size);
+  height: var(--disc-size);
+  border-radius: 50%;
+  display: inline-block;
+  box-shadow: 2px 3px 8px var(--disc-shadow);
+  animation: place 0.18s ease-out;
+  position: relative;
+}
+
+.disc--black {
+  background: radial-gradient(circle at 38% 32%, var(--disc-black-shine), var(--disc-black) 65%);
+}
+
+.disc--white {
+  background: radial-gradient(circle at 38% 32%, var(--disc-white-shine), var(--disc-white) 65%);
+  border: 1px solid #ccc;
+}
+
+@keyframes place {
+  from { transform: scale(0.4); opacity: 0.5; }
+  to   { transform: scale(1);   opacity: 1; }
+}
+
+/* ------------------------------------------------------------
+   Controls
+   ------------------------------------------------------------ */
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.btn {
+  padding: 0.55rem 1.4rem;
+  border: none;
+  border-radius: var(--radius);
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+}
+
+.btn:active {
+  transform: scale(0.96);
+}
+
+.btn--primary {
+  background: var(--accent);
+  color: #fff;
+}
+
+.btn--primary:hover {
+  background: var(--accent-hover);
+}
+
+.hint-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  user-select: none;
+}
+
+.hint-toggle input[type="checkbox"] {
+  accent-color: var(--accent);
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+/* ------------------------------------------------------------
+   Responsive
+   ------------------------------------------------------------ */
+@media (max-width: 520px) {
+  :root {
+    --cell-size: 42px;
+    --disc-size: 32px;
+  }
+
+  header h1 { font-size: 1.35rem; }
+  .score-value { font-size: 1.5rem; }
+  .score-disc { width: 22px; height: 22px; }
+}
+
+@media (max-width: 360px) {
+  :root {
+    --cell-size: 36px;
+    --disc-size: 26px;
+  }
+}
