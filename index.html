@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="オセロ (Reversi) ゲーム — GitHub Pages版" />
+  <title>Reversi</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <header>
+    <h1>Reversi</h1>
+  </header>
+
+  <main>
+
+    <!-- Score panel -->
+    <div class="score-panel" aria-label="スコア">
+      <div class="score-item">
+        <div class="score-disc score-disc--black" aria-hidden="true"></div>
+        <div>
+          <div class="score-label">黒</div>
+          <div class="score-value" id="score-black">2</div>
+        </div>
+      </div>
+
+      <div class="score-item">
+        <div>
+          <div class="score-label">白</div>
+          <div class="score-value" id="score-white">2</div>
+        </div>
+        <div class="score-disc score-disc--white" aria-hidden="true"></div>
+      </div>
+    </div>
+
+    <!-- Status message -->
+    <div id="status" class="status status--turn" role="status" aria-live="polite">
+      黒の番です
+    </div>
+
+    <!-- Game board -->
+    <div id="board-container" aria-label="オセロボード"></div>
+
+    <!-- Controls -->
+    <div class="controls">
+      <button id="btn-reset" class="btn btn--primary">最初から</button>
+
+      <label class="hint-toggle">
+        <input type="checkbox" id="toggle-hints" checked />
+        置ける場所を表示
+      </label>
+    </div>
+
+  </main>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
