@@ -6,14 +6,7 @@
 
 'use strict';
 
-import {
-  createGameState,
-  placePiece,
-  PLAYER,
-  MIN_BOARD_SIZE,
-  MAX_BOARD_SIZE,
-  DEFAULT_BOARD_SIZE,
-} from './reversi.js';
+import { createGameState, placePiece, PLAYER } from './reversi.js';
 import { BoardRenderer, ScoreDisplay, StatusDisplay } from './ui.js';
 
 // ---------------------------------------------------------------------------
@@ -30,9 +23,6 @@ class ReversiApp {
     this._resetBtn       = document.getElementById('btn-reset');
     this._hintsToggle    = document.getElementById('toggle-hints');
     this._sizeSelect     = document.getElementById('board-size');
-
-    // Populate the size selector with even values from MIN to MAX
-    this._populateSizeSelect();
 
     // UI helpers
     this._boardRenderer = new BoardRenderer(
@@ -63,20 +53,6 @@ class ReversiApp {
 
     // Start game
     this._reset();
-  }
-
-  // -------------------------------------------------------------------------
-  // Private: populate <select> with even board sizes
-  // -------------------------------------------------------------------------
-
-  _populateSizeSelect() {
-    for (let size = MIN_BOARD_SIZE; size <= MAX_BOARD_SIZE; size += 2) {
-      const option = document.createElement('option');
-      option.value       = size;
-      option.textContent = `${size} × ${size}`;
-      if (size === DEFAULT_BOARD_SIZE) option.selected = true;
-      this._sizeSelect.appendChild(option);
-    }
   }
 
   // -------------------------------------------------------------------------
