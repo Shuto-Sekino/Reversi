@@ -6,7 +6,7 @@
 
 'use strict';
 
-import { createGameState, placePiece, PLAYER } from './reversi.js';
+import { createGameState, placePiece } from './reversi.js';
 import { BoardRenderer, ScoreDisplay, StatusDisplay } from './ui.js';
 
 // ---------------------------------------------------------------------------
@@ -17,19 +17,19 @@ class ReversiApp {
   constructor() {
     // DOM references
     this._boardContainer = document.getElementById('board-container');
-    this._scoreBlack     = document.getElementById('score-black');
-    this._scoreWhite     = document.getElementById('score-white');
     this._statusEl       = document.getElementById('status');
     this._resetBtn       = document.getElementById('btn-reset');
     this._hintsToggle    = document.getElementById('toggle-hints');
     this._sizeSelect     = document.getElementById('board-size');
+    this._playerSelect   = document.getElementById('player-count');
+    this._scorePanel     = document.getElementById('score-panel');
 
     // UI helpers
     this._boardRenderer = new BoardRenderer(
       this._boardContainer,
       (r, c) => this._handleCellClick(r, c)
     );
-    this._scoreDisplay  = new ScoreDisplay(this._scoreBlack, this._scoreWhite);
+    this._scoreDisplay  = new ScoreDisplay(this._scorePanel);
     this._statusDisplay = new StatusDisplay(this._statusEl);
 
     // Settings
@@ -42,6 +42,7 @@ class ReversiApp {
       this._render();
     });
     this._sizeSelect.addEventListener('change', () => this._reset());
+    this._playerSelect.addEventListener('change', () => this._reset());
 
     // Recompute cell size if the window is resized
     window.addEventListener('resize', () => {
@@ -63,33 +64,30 @@ class ReversiApp {
     return parseInt(this._sizeSelect.value, 10);
   }
 
+  _selectedPlayers() {
+    return parseInt(this._playerSelect.value, 10);
+  }
+
   _reset() {
-    const size = this._selectedSize();
-    // Rebuild DOM grid only when size changes (no-op if same size)
+    const size       = this._selectedSize();
+    const numPlayers = this._selectedPlayers();
     this._boardRenderer.rebuild(size);
-    this._state = createGameState(size);
+    this._scoreDisplay.rebuild(numPlayers);
+    this._state = createGameState(size, numPlayers);
     this._render();
   }
 
   _handleCellClick(row, col) {
     if (this._state.gameOver) return;
 
-    const prevPlayer = this._state.currentPlayer;
-    const nextState  = placePiece(this._state, row, col);
-
-    // No change means the click was on an invalid cell
-    if (nextState === this._state) return;
-
-    // Detect pass: same player continues because opponent has no moves
-    const wasPass =
-      !nextState.gameOver &&
-      nextState.currentPlayer === prevPlayer;
+    const nextState = placePiece(this._state, row, col);
+    if (nextState === this._state) return;  // invalid cell
 
     this._state = nextState;
 
-    if (wasPass) {
-      this._statusDisplay.showPass(PLAYER.BLACK + PLAYER.WHITE - prevPlayer);
-      // Delay the normal status update so the pass message is readable
+    if (nextState.passedPlayers.length > 0 && !nextState.gameOver) {
+      // Show pass message then resume normal rendering
+      this._statusDisplay.showPass(nextState.passedPlayers, nextState.numPlayers);
       setTimeout(() => this._render(), 1200);
     } else {
       this._render();
@@ -104,8 +102,6 @@ class ReversiApp {
     this._boardRenderer.render(this._state, this._showHints);
     this._scoreDisplay.update(this._state.board);
     this._statusDisplay.update(this._state);
-
-    // Disable board interaction when game is over
     this._boardContainer.classList.toggle('board--disabled', this._state.gameOver);
   }
 }

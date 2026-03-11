@@ -15,28 +15,12 @@
 
   <main>
 
-    <!-- Score panel -->
-    <div class="score-panel" aria-label="スコア">
-      <div class="score-item">
-        <div class="score-disc score-disc--black" aria-hidden="true"></div>
-        <div>
-          <div class="score-label">黒</div>
-          <div class="score-value" id="score-black">2</div>
-        </div>
-      </div>
-
-      <div class="score-item">
-        <div>
-          <div class="score-label">白</div>
-          <div class="score-value" id="score-white">2</div>
-        </div>
-        <div class="score-disc score-disc--white" aria-hidden="true"></div>
-      </div>
-    </div>
+    <!-- Score panel — populated dynamically by JS -->
+    <div class="score-panel" id="score-panel" aria-label="スコア"></div>
 
     <!-- Status message -->
     <div id="status" class="status status--turn" role="status" aria-live="polite">
-      黒の番です
+      赤の番です
     </div>
 
     <!-- Game board -->
@@ -45,6 +29,15 @@
     <!-- Controls -->
     <div class="controls">
       <button id="btn-reset" class="btn btn--primary">最初から</button>
+
+      <label class="size-select-label" for="player-count">
+        人数
+        <select id="player-count" class="size-select" aria-label="プレイヤー人数を選択">
+          <option value="2" selected>2人</option>
+          <option value="3">3人</option>
+          <option value="4">4人</option>
+        </select>
+      </label>
 
       <label class="size-select-label" for="board-size">
         盤面サイズ
