@@ -6,7 +6,14 @@
 
 'use strict';
 
-import { createGameState, placePiece, PLAYER } from './reversi.js';
+import {
+  createGameState,
+  placePiece,
+  PLAYER,
+  MIN_BOARD_SIZE,
+  MAX_BOARD_SIZE,
+  DEFAULT_BOARD_SIZE,
+} from './reversi.js';
 import { BoardRenderer, ScoreDisplay, StatusDisplay } from './ui.js';
 
 // ---------------------------------------------------------------------------
@@ -22,6 +29,10 @@ class ReversiApp {
     this._statusEl       = document.getElementById('status');
     this._resetBtn       = document.getElementById('btn-reset');
     this._hintsToggle    = document.getElementById('toggle-hints');
+    this._sizeSelect     = document.getElementById('board-size');
+
+    // Populate the size selector with even values from MIN to MAX
+    this._populateSizeSelect();
 
     // UI helpers
     this._boardRenderer = new BoardRenderer(
@@ -40,18 +51,47 @@ class ReversiApp {
       this._showHints = e.target.checked;
       this._render();
     });
+    this._sizeSelect.addEventListener('change', () => this._reset());
+
+    // Recompute cell size if the window is resized
+    window.addEventListener('resize', () => {
+      if (this._state) {
+        this._boardRenderer.rebuild(this._state.size);
+        this._render();
+      }
+    });
 
     // Start game
     this._reset();
   }
 
   // -------------------------------------------------------------------------
+  // Private: populate <select> with even board sizes
+  // -------------------------------------------------------------------------
+
+  _populateSizeSelect() {
+    for (let size = MIN_BOARD_SIZE; size <= MAX_BOARD_SIZE; size += 2) {
+      const option = document.createElement('option');
+      option.value       = size;
+      option.textContent = `${size} × ${size}`;
+      if (size === DEFAULT_BOARD_SIZE) option.selected = true;
+      this._sizeSelect.appendChild(option);
+    }
+  }
+
+  // -------------------------------------------------------------------------
   // Game control
   // -------------------------------------------------------------------------
 
+  _selectedSize() {
+    return parseInt(this._sizeSelect.value, 10);
+  }
+
   _reset() {
-    this._state = createGameState();
-    this._previousPlayer = null;
+    const size = this._selectedSize();
+    // Rebuild DOM grid only when size changes (no-op if same size)
+    this._boardRenderer.rebuild(size);
+    this._state = createGameState(size);
     this._render();
   }
 
@@ -64,7 +104,7 @@ class ReversiApp {
     // No change means the click was on an invalid cell
     if (nextState === this._state) return;
 
-    // Detect pass: previous player is the same as current (opponent was skipped)
+    // Detect pass: same player continues because opponent has no moves
     const wasPass =
       !nextState.gameOver &&
       nextState.currentPlayer === prevPlayer;
@@ -87,8 +127,7 @@ class ReversiApp {
   _render() {
     this._boardRenderer.render(this._state, this._showHints);
     this._scoreDisplay.update(this._state.board);
-    this._statusDisplay.update(this._state, this._previousPlayer);
-    this._previousPlayer = this._state.currentPlayer;
+    this._statusDisplay.update(this._state);
 
     // Disable board interaction when game is over
     this._boardContainer.classList.toggle('board--disabled', this._state.gameOver);

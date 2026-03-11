@@ -2,6 +2,7 @@
  * reversi.js
  * Pure game logic for Reversi (Othello).
  * No DOM dependencies — all state is plain data.
+ * Board size is variable (any even number ≥ 4).
  */
 
 'use strict';
@@ -17,7 +18,12 @@ const PLAYER = Object.freeze({
   WHITE: 2,
 });
 
-const BOARD_SIZE = 8;
+/** Default board size (standard Othello). */
+const DEFAULT_BOARD_SIZE = 8;
+
+/** Minimum and maximum supported board sizes (must be even). */
+const MIN_BOARD_SIZE = 4;
+const MAX_BOARD_SIZE = 32;
 
 /** All 8 directions on the board */
 const DIRECTIONS = Object.freeze([
@@ -31,14 +37,15 @@ const DIRECTIONS = Object.freeze([
 // ---------------------------------------------------------------------------
 
 /**
- * Create a fresh 8×8 board with the standard opening position.
+ * Create a fresh N×N board with the standard opening position.
+ * @param {number} size - Even number between MIN_BOARD_SIZE and MAX_BOARD_SIZE
  * @returns {number[][]}
  */
-function createInitialBoard() {
-  const board = Array.from({ length: BOARD_SIZE }, () =>
-    new Array(BOARD_SIZE).fill(PLAYER.NONE)
+function createInitialBoard(size) {
+  const board = Array.from({ length: size }, () =>
+    new Array(size).fill(PLAYER.NONE)
   );
-  const mid = BOARD_SIZE / 2;
+  const mid = size / 2;
   board[mid - 1][mid - 1] = PLAYER.WHITE;
   board[mid - 1][mid]     = PLAYER.BLACK;
   board[mid][mid - 1]     = PLAYER.BLACK;
@@ -65,13 +72,14 @@ function opponent(player) {
 }
 
 /**
- * Check whether (row, col) is inside the board.
+ * Check whether (row, col) is inside an N×N board.
  * @param {number} row
  * @param {number} col
+ * @param {number} size
  * @returns {boolean}
  */
-function inBounds(row, col) {
-  return row >= 0 && row < BOARD_SIZE && col >= 0 && col < BOARD_SIZE;
+function inBounds(row, col, size) {
+  return row >= 0 && row < size && col >= 0 && col < size;
 }
 
 // ---------------------------------------------------------------------------
@@ -91,7 +99,8 @@ function inBounds(row, col) {
 function getFlips(board, row, col, player) {
   if (board[row][col] !== PLAYER.NONE) return [];
 
-  const opp = opponent(player);
+  const size = board.length;
+  const opp  = opponent(player);
   const flips = [];
 
   for (const [dr, dc] of DIRECTIONS) {
@@ -99,13 +108,13 @@ function getFlips(board, row, col, player) {
     let r = row + dr;
     let c = col + dc;
 
-    while (inBounds(r, c) && board[r][c] === opp) {
+    while (inBounds(r, c, size) && board[r][c] === opp) {
       line.push([r, c]);
       r += dr;
       c += dc;
     }
 
-    if (line.length > 0 && inBounds(r, c) && board[r][c] === player) {
+    if (line.length > 0 && inBounds(r, c, size) && board[r][c] === player) {
       flips.push(...line);
     }
   }
@@ -134,9 +143,10 @@ function isValidMove(board, row, col, player) {
  * @returns {Array<[number, number]>}
  */
 function getValidMoves(board, player) {
+  const size  = board.length;
   const moves = [];
-  for (let r = 0; r < BOARD_SIZE; r++) {
-    for (let c = 0; c < BOARD_SIZE; c++) {
+  for (let r = 0; r < size; r++) {
+    for (let c = 0; c < size; c++) {
       if (isValidMove(board, r, c, player)) {
         moves.push([r, c]);
       }
@@ -188,7 +198,8 @@ function countPieces(board) {
 
 /**
  * @typedef {Object} GameState
- * @property {number[][]} board        - Current board
+ * @property {number[][]} board         - Current board
+ * @property {number}     size          - Board side length (N in N×N)
  * @property {number}     currentPlayer - Whose turn it is
  * @property {boolean}    gameOver      - True when the game has ended
  * @property {number|null} winner       - Winning player, or null for a draw
@@ -196,15 +207,17 @@ function countPieces(board) {
  */
 
 /**
- * Create the initial game state.
+ * Create the initial game state for an N×N board.
+ * @param {number} [size=DEFAULT_BOARD_SIZE] - Even number in [MIN_BOARD_SIZE, MAX_BOARD_SIZE]
  * @returns {GameState}
  */
-function createGameState() {
-  const board = createInitialBoard();
+function createGameState(size = DEFAULT_BOARD_SIZE) {
+  const board         = createInitialBoard(size);
   const currentPlayer = PLAYER.BLACK; // Black moves first
-  const validMoves = getValidMoves(board, currentPlayer);
+  const validMoves    = getValidMoves(board, currentPlayer);
   return {
     board,
+    size,
     currentPlayer,
     gameOver: false,
     winner: null,
@@ -226,7 +239,7 @@ function placePiece(state, row, col) {
   if (!isValidMove(state.board, row, col, state.currentPlayer)) return state;
 
   const newBoard = applyMove(cloneBoard(state.board), row, col, state.currentPlayer);
-  return resolveNextTurn(newBoard, state.currentPlayer);
+  return resolveNextTurn(newBoard, state.currentPlayer, state.size);
 }
 
 /**
@@ -234,20 +247,21 @@ function placePiece(state, row, col) {
  *
  * @param {number[][]} board
  * @param {number} lastPlayer
+ * @param {number} size
  * @returns {GameState}
  */
-function resolveNextTurn(board, lastPlayer) {
-  const next = opponent(lastPlayer);
+function resolveNextTurn(board, lastPlayer, size) {
+  const next      = opponent(lastPlayer);
   const nextMoves = getValidMoves(board, next);
 
   if (nextMoves.length > 0) {
-    return { board, currentPlayer: next, gameOver: false, winner: null, validMoves: nextMoves };
+    return { board, size, currentPlayer: next, gameOver: false, winner: null, validMoves: nextMoves };
   }
 
   // Next player must pass — check if last player can still move
   const lastMoves = getValidMoves(board, lastPlayer);
   if (lastMoves.length > 0) {
-    return { board, currentPlayer: lastPlayer, gameOver: false, winner: null, validMoves: lastMoves };
+    return { board, size, currentPlayer: lastPlayer, gameOver: false, winner: null, validMoves: lastMoves };
   }
 
   // Neither player can move → game over
@@ -256,16 +270,18 @@ function resolveNextTurn(board, lastPlayer) {
   if (counts[PLAYER.BLACK] > counts[PLAYER.WHITE]) winner = PLAYER.BLACK;
   else if (counts[PLAYER.WHITE] > counts[PLAYER.BLACK]) winner = PLAYER.WHITE;
 
-  return { board, currentPlayer: next, gameOver: true, winner, validMoves: [] };
+  return { board, size, currentPlayer: next, gameOver: true, winner, validMoves: [] };
 }
 
 // ---------------------------------------------------------------------------
-// Exports (works as a plain ES module)
+// Exports (plain ES module)
 // ---------------------------------------------------------------------------
 
 export {
   PLAYER,
-  BOARD_SIZE,
+  DEFAULT_BOARD_SIZE,
+  MIN_BOARD_SIZE,
+  MAX_BOARD_SIZE,
   createGameState,
   placePiece,
   getValidMoves,
