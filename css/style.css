@@ -1,21 +1,25 @@
 /* ============================================================
    style.css — Reversi / Othello
    CSS custom properties make it easy to retheme the game.
+   Cell/disc sizes are set dynamically via JS on #board-container.
    ============================================================ */
 
 /* ------------------------------------------------------------
    Design tokens (variables)
    ------------------------------------------------------------ */
 :root {
-  /* Board */
+  /* Board (cell/disc sizes are set by JS on #board-container) */
   --board-bg:           #276221;   /* classic green felt */
   --board-border:       #1a3d17;
   --board-shadow:       rgba(0, 0, 0, 0.45);
   --cell-border:        #1e4d1a;
+
+  /* Default sizes — overridden per-board by JS */
   --cell-size:          60px;
+  --disc-size:          46px;
+  --hint-dot-size:      18px;
 
   /* Pieces */
-  --disc-size:          46px;
   --disc-black:         #1a1a1a;
   --disc-black-shine:   #555;
   --disc-white:         #f5f5f5;
@@ -82,7 +86,7 @@ main {
   gap: 1.25rem;
   padding: 1.5rem 1rem 2rem;
   width: 100%;
-  max-width: 560px;
+  /* No max-width: the board size drives the layout */
 }
 
 /* ------------------------------------------------------------
@@ -92,7 +96,7 @@ main {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  width: 100%;
+  width: min(100%, 480px);
   background: var(--surface);
   border-radius: var(--radius);
   padding: 0.75rem 1.5rem;
@@ -146,7 +150,7 @@ main {
   border-radius: var(--radius);
   text-align: center;
   transition: background 0.25s, color 0.25s;
-  width: 100%;
+  width: min(100%, 480px);
 }
 
 .status--turn { background: var(--surface-alt); color: var(--text-primary); }
@@ -165,6 +169,7 @@ main {
     0 8px 32px var(--board-shadow);
   overflow: hidden;
   transition: opacity 0.2s;
+  /* --cell-size, --disc-size, --hint-dot-size are set by JS */
 }
 
 #board-container.board--disabled {
@@ -197,8 +202,8 @@ main {
   position: absolute;
   inset: 0;
   margin: auto;
-  width: 18px;
-  height: 18px;
+  width: var(--hint-dot-size);
+  height: var(--hint-dot-size);
   border-radius: 50%;
   background: var(--hint-dot-color);
   pointer-events: none;
@@ -269,6 +274,34 @@ main {
   background: var(--accent-hover);
 }
 
+/* Board-size selector */
+.size-select-label {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  user-select: none;
+}
+
+.size-select {
+  background: var(--surface);
+  color: var(--text-primary);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: var(--radius);
+  padding: 0.3rem 0.5rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+  accent-color: var(--accent);
+}
+
+.size-select:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Hint toggle */
 .hint-toggle {
   display: flex;
   align-items: center;
@@ -289,20 +322,8 @@ main {
 /* ------------------------------------------------------------
    Responsive
    ------------------------------------------------------------ */
-@media (max-width: 520px) {
-  :root {
-    --cell-size: 42px;
-    --disc-size: 32px;
-  }
-
-  header h1 { font-size: 1.35rem; }
+@media (max-width: 480px) {
+  header h1    { font-size: 1.35rem; }
   .score-value { font-size: 1.5rem; }
-  .score-disc { width: 22px; height: 22px; }
-}
-
-@media (max-width: 360px) {
-  :root {
-    --cell-size: 36px;
-    --disc-size: 26px;
-  }
+  .score-disc  { width: 22px; height: 22px; }
 }
